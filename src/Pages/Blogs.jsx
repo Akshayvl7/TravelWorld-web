@@ -10,25 +10,26 @@ import { BASE_URL } from "../utils/config";
 const Blogs = () => {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [ error, setError]=useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch blogs data from the API
     const fetchBlogs = async () => {
       try {
         const response = await axios.get(`${BASE_URL}/blogs`);
-        setBlogs(response.data);
+        // Check if response.data.data exists (common API structure) otherwise use response.data
+        setBlogs(response.data.data || response.data);
         setLoading(false);
       } catch (error) {
+        console.error("Error fetching blogs:", error);
+        setError(error.message || "Error loading blog details. Check your network");
         setLoading(false);
-        setError(true);
       }
     };
 
     fetchBlogs();
   }, []);
 
-  if (loading ) {
+  if (loading) {
     return (
       <div className="loader-container">
         <div className="loader" />
@@ -38,28 +39,24 @@ const Blogs = () => {
   }
 
   if (error) {
-    return <div className="error__msg">Error loading blog details. Check your network</div>;
+    return <div className="error__msg">{error}</div>;
   }
 
+  if (!blogs || blogs.length === 0) {
+    return <div className="error__msg">No blogs found.</div>;
+  }
 
   return (
     <div>
-      <CommonSection title={"All blogs"} />
+      <CommonSection title={"All Blogs"} />
       <section className="mt-4">
         <Container>
           <Row>
-            {loading ? (
-              <div className="loader-container">
-                <div className="loader" />
-                <div className="loading-text">Loading...</div>
-              </div>
-            ) : (
-              blogs.map((blog) => (
-                <Col lg="4" md="6" sm="6" className="mb-4" key={blog._id}>
-                  <BlogCard blog={blog} />
-                </Col>
-              ))
-            )}
+            {blogs.map((blog) => (
+              <Col lg="4" md="6" sm="6" className="mb-4" key={blog._id || blog.id}>
+                <BlogCard blog={blog} />
+              </Col>
+            ))}
           </Row>
         </Container>
       </section>
